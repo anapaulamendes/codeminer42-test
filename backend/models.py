@@ -40,6 +40,7 @@ def survivor_post_save(signal, instance, sender, **kwargs):
     ammunition = Item.objects.create(name="Ammunition", points=1, quantity=0)
     for item in [water, food, medication, ammunition]:
         inventory.items.add(item)
-    instance.inventory = inventory
+    instance.inventory_id = inventory.id
+    instance.save()
 
 signals.post_save.connect(survivor_post_save, sender=Survivor)
