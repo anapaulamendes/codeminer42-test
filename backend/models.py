@@ -53,8 +53,9 @@ def survivor_pre_save(signal, instance, sender, **kwargs):
         if not "Ammunition" in items:
             ammunition = Item.objects.create(name="Ammunition", points=1)
             instance.inventory.items.add(ammunition)
+    else:
         if instance.infected == True or instance.reported_infected > 0:
             instance.delete()
-            raise Exception("Impossible to register zoombies!")
+            raise Exception("Impossible to register zombies!")
 
 signals.pre_save.connect(survivor_pre_save, sender=Survivor)
