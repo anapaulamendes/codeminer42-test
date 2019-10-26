@@ -11,13 +11,17 @@ class Item(models.Model):
         return self.name
 
 
+    class Meta:
+        ordering = ["-points",]
+
+
 class Inventory(models.Model):
     items = models.ManyToManyField(Item)
 
 
 class LastLocation(models.Model):
-    latitude = models.DecimalField("Latitude", max_digits=50, decimal_places=30)
-    longitude = models.DecimalField("Longitude", max_digits=50, decimal_places=30)
+    latitude = models.DecimalField("Latitude", max_digits=50, decimal_places=30, default=0)
+    longitude = models.DecimalField("Longitude", max_digits=50, decimal_places=30, default=0)
 
 
 class Survivor(models.Model):
@@ -32,15 +36,25 @@ class Survivor(models.Model):
     def __str__(self):
         return self.name
 
-def survivor_post_save(signal, instance, sender, **kwargs):
-    inventory = Inventory.objects.create()
-    water = Item.objects.create(name="Water", points=4, quantity=0)
-    food = Item.objects.create(name="Food", points=3, quantity=0)
-    medication = Item.objects.create(name="Medication", points=2, quantity=0)
-    ammunition = Item.objects.create(name="Ammunition", points=1, quantity=0)
-    for item in [water, food, medication, ammunition]:
-        inventory.items.add(item)
-    instance.inventory_id = inventory.id
-    instance.save()
+def survivor_pre_save(signal, instance, sender, **kwargs):
+    if instance.inventory_id is not None:
+        items = []
+        for item in instance.inventory.items.all():
+            items.append(item.name)
+        if not "Water" in items:
+            water = Item.objects.create(name="Water", points=4, quantity=0)
+            instance.inventory.items.add(water)
+        if not "Food" in items:
+            food = Item.objects.create(name="Food", points=3)
+            instance.inventory.items.add(food)
+        if not "Medication" in items:
+            medication = Item.objects.create(name="Medication", points=2)
+            instance.inventory.items.add(medication)
+        if not "Ammunition" in items:
+            ammunition = Item.objects.create(name="Ammunition", points=1)
+            instance.inventory.items.add(ammunition)
+        if instance.infected == True or instance.reported_infected > 0:
+            instance.delete()
+            raise Exception("Impossible to register zoombies!")
 
-signals.post_save.connect(survivor_post_save, sender=Survivor)
+signals.pre_save.connect(survivor_pre_save, sender=Survivor)
