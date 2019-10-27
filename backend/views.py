@@ -1,12 +1,12 @@
 from .models import Survivor, LastLocation, Item, Reports
 from .serializers import SurvivorSerializer, LastLocationSerializer, ReportsSerializer
 from django.shortcuts import get_object_or_404
-from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework import status
+from .services.reportinfected import FlagInfected
 
 @api_view(['GET'])
 def api_root(request, format=None):
@@ -58,7 +58,7 @@ class LastLocationUpdate(APIView):
             raise Exception("Zombie invasion! Permission denied!")
 
 
-class ReportInfected(APIView):
+class ReportInfected(APIView, FlagInfected):
 
     def get(self, request, pk_reporter, pk_reported, format=None):
         survivor = get_object_or_404(Survivor, pk=pk_reported)
@@ -68,27 +68,13 @@ class ReportInfected(APIView):
     def patch(self, request, pk_reporter, pk_reported, format=None):
         reporter = get_object_or_404(Survivor, pk=pk_reporter)
         reported = get_object_or_404(Survivor, pk=pk_reported)
-        if reporter.infected == False:
-            if reported.reported_infected < 2:
-                if request.data["infected"] == True:
-                    data = {
-                        "infected": False,
-                        "reported_infected": reported.reported_infected + 1
-                    }
-                else:
-                    raise Exception("Flag as infected!")
-            else:
-                data = {
-                    "infected": True,
-                    "reported_infected": reported.reported_infected + 1
-                }
+        data = self.report_infected(request, reporter, reported)
+        if data:
             serializer = SurvivorSerializer(reported, data=data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-        else:
-            raise Exception("Zombie invasion! Permission denied!")
 
 
 class TradeItems(APIView):
