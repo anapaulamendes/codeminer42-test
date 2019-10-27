@@ -1,5 +1,6 @@
 from .models import Survivor, LastLocation, Item, Reports
 from .serializers import SurvivorSerializer, LastLocationSerializer, ReportsSerializer
+from django.shortcuts import get_object_or_404
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
@@ -25,74 +26,48 @@ class SurvivorList(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 class SurvivorDetail(APIView):
-    def get_object(self, pk):
-        try:
-            return Survivor.objects.get(pk=pk)
-        except Survivor.DoesNotExist:
-            raise Http404
 
     def get(self, request, pk, format=None):
-        survivor = self.get_object(pk)
+        survivor = get_object_or_404(Survivor, pk=pk)
         serializer = SurvivorSerializer(survivor)
         return Response(serializer.data)
 
-class LastLocationUpdate(APIView):
-    def get_survivor(self, pk):
-        try:
-            return Survivor.objects.get(pk=pk)
-        except Survivor.DoesNotExist:
-            raise Http404
 
-    def get_last_location(self, pk):
-        try:
-            return LastLocation.objects.get(pk=pk)
-        except LastLocation.DoesNotExist:
-            raise Http404
+class LastLocationUpdate(APIView):
 
     def get(self, request, pk, format=None):
-        survivor = self.get_survivor(pk)
-        last_location = self.get_last_location(survivor.last_location_id)
+        survivor = get_object_or_404(Survivor, pk=pk)
+        last_location = get_object_or_404(LastLocation, pk=survivor.last_location_id)
         serializer = LastLocationSerializer(last_location)
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
-        survivor = self.get_survivor(pk)
+        survivor = get_object_or_404(Survivor, pk=pk)
         if survivor.infected == False:
-            last_location = self.get_last_location(survivor.last_location_id)
+            last_location = get_object_or_404(LastLocation, pk=survivor.last_location_id)
             serializer = LastLocationSerializer(last_location, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         else:
             raise Exception("Zombie invasion! Permission denied!")
 
 
 class ReportInfected(APIView):
-    def get_reporter(self, pk_reporter):
-        try:
-            return Survivor.objects.get(pk=pk_reporter)
-        except Survivor.DoesNotExist:
-            raise Http404
-
-    def get_reported(self, pk_reported):
-        try:
-            return Survivor.objects.get(pk=pk_reported)
-        except Survivor.DoesNotExist:
-            raise Http404
 
     def get(self, request, pk_reporter, pk_reported, format=None):
-        survivor = self.get_reported(pk_reported)
+        survivor = get_object_or_404(Survivor, pk=pk_reported)
         serializer = SurvivorSerializer(survivor)
         return Response(serializer.data)
 
     def patch(self, request, pk_reporter, pk_reported, format=None):
-        reporter = self.get_reporter(pk_reporter)
-        reported = self.get_reported(pk_reported)
+        reporter = get_object_or_404(Survivor, pk=pk_reporter)
+        reported = get_object_or_404(Survivor, pk=pk_reported)
         if reporter.infected == False:
             if reported.reported_infected < 2:
                 if request.data["infected"] == True:
@@ -111,35 +86,24 @@ class ReportInfected(APIView):
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         else:
             raise Exception("Zombie invasion! Permission denied!")
 
 
 class TradeItems(APIView):
-    def get_survivor_1(self, pk_sur_1):
-        try:
-            return Survivor.objects.get(pk=pk_sur_1)
-        except Survivor.DoesNotExist:
-            raise Http404
-
-    def get_survivor_2(self, pk_sur_2):
-        try:
-            return Survivor.objects.get(pk=pk_sur_2)
-        except Survivor.DoesNotExist:
-            raise Http404
 
     def get(self, request, pk_sur_1, pk_sur_2, format=None):
-        survivor_1 = self.get_survivor_1(pk_sur_1)
-        survivor_2 = self.get_survivor_2(pk_sur_2)
+        survivor_1 = get_object_or_404(Survivor, pk=pk_sur_1)
+        survivor_2 = get_object_or_404(Survivor, pk=pk_sur_2)
         serializer_1 = SurvivorSerializer(survivor_1)
         serializer_2 = SurvivorSerializer(survivor_2)
         data = ((serializer_1.data), (serializer_2.data))
         return Response(data)
 
     def patch(self, request, pk_sur_1, pk_sur_2, format=None):
-        survivor_1 = self.get_survivor_1(pk_sur_1)
-        survivor_2 = self.get_survivor_2(pk_sur_2)
+        survivor_1 = get_object_or_404(Survivor, pk=pk_sur_1)
+        survivor_2 = get_object_or_404(Survivor, pk=pk_sur_2)
         items = ["Water", "Food", "Medication", "Ammunition"]
         points_survivor_1 = 0
         points_survivor_2 = 0
