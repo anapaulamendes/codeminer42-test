@@ -1,5 +1,12 @@
 from rest_framework import serializers
-from .models import Item, Inventory, LastLocation, Survivor
+from .models import Reports, Item, Inventory, LastLocation, Survivor
+
+
+class ReportsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reports
+        fields = ['id', 'per_infected', 'per_not_infected', 'average_water',
+            'average_food', 'average_medication', 'average_ammunition', 'lost_points']
 
 
 class ItemSerializer(serializers.ModelSerializer):

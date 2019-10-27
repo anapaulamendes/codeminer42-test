@@ -2,6 +2,30 @@ from django.db import models
 from django.db.models import signals
 
 
+class Reports(models.Model):
+    per_infected = models.DecimalField("Percentage of infected survivors", null=True, max_digits=50, decimal_places=30)
+    per_not_infected = models.DecimalField("Percentage of non-infected survivors", null=True, max_digits=50, decimal_places=30)
+    average_water = models.DecimalField("Average amount of waters by survivor", null=True, max_digits=50, decimal_places=30)
+    average_food = models.DecimalField("Average amount of foods by survivor", null=True, max_digits=50, decimal_places=30)
+    average_medication = models.DecimalField("Average amount of medication by survivor", null=True, max_digits=50, decimal_places=30)
+    average_ammunition = models.DecimalField("Average amount of ammunition by survivor", null=True, max_digits=50, decimal_places=30)
+    lost_points = models.PositiveIntegerField("Points lost because of infected survivor", null=True)
+
+    def create(self, **kwargs):
+        query = Reports.objects.all()
+        if query.exists():
+            raise Exception("Reports already exist.")
+        else:
+            return super().create(**kwargs)
+
+    def save(self, **kwargs):
+        query = Reports.objects.all()
+        if self.pk == None and query.exists():
+            raise Exception("Reports already exist.")
+        else:
+            return super().save(**kwargs)
+
+
 class Item(models.Model):
     name = models.CharField("Name", max_length=20)
     points = models.PositiveIntegerField("Points")
