@@ -10,4 +10,5 @@ urlpatterns = [
     url(r'^survivors/(?P<pk>[^/]+)/$', views.SurvivorDetail.as_view(), name='survivor_detail'),
     url(r'^survivors/(?P<pk>[^/]+)/last-location$', views.LastLocationUpdate.as_view(), name='last_location_update'),
     url(r'^survivors/(?P<pk_reporter>[^/]+)/report-infected/(?P<pk_reported>[^/]+)$', views.ReportInfected.as_view(), name='report_infected'),
+    url(r'^survivors/(?P<pk_sur_1>[^/]+)/trade-items/(?P<pk_sur_2>[^/]+)$', views.TradeItems.as_view(), name='trade_items'),
 ]

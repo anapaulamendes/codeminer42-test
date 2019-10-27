@@ -114,3 +114,77 @@ class ReportInfected(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             raise Exception("Zombie invasion! Permission denied!")
+
+
+class TradeItems(APIView):
+    def get_survivor_1(self, pk_sur_1):
+        try:
+            return Survivor.objects.get(pk=pk_sur_1)
+        except Survivor.DoesNotExist:
+            raise Http404
+
+    def get_survivor_2(self, pk_sur_2):
+        try:
+            return Survivor.objects.get(pk=pk_sur_2)
+        except Survivor.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk_sur_1, pk_sur_2, format=None):
+        survivor_1 = self.get_survivor_1(pk_sur_1)
+        survivor_2 = self.get_survivor_2(pk_sur_2)
+        serializer_1 = SurvivorSerializer(survivor_1)
+        serializer_2 = SurvivorSerializer(survivor_2)
+        data = ((serializer_1.data), (serializer_2.data))
+        return Response(data)
+
+    def patch(self, request, pk_sur_1, pk_sur_2, format=None):
+        survivor_1 = self.get_survivor_1(pk_sur_1)
+        survivor_2 = self.get_survivor_2(pk_sur_2)
+        items = ["Water", "Food", "Medication", "Ammunition"]
+        points_survivor_1 = 0
+        points_survivor_2 = 0
+        if survivor_1.infected == False and survivor_2.infected == False:
+            for item_key in request.data[0]["survivor_1"]["trade_item"].keys():
+                item_qt = survivor_1.inventory.items.get(name=item_key).quantity
+                if item_qt - request.data[0]["survivor_1"]["trade_item"][item_key] >= 0:
+                    item_points = survivor_1.inventory.items.get(name=item_key).points
+                    points_survivor_1 += request.data[0]["survivor_1"]["trade_item"][item_key] * item_points
+                else:
+                    raise Exception("It isn't enough to trade! Permission denied!")
+            for item_key in request.data[1]["survivor_2"]["trade_item"].keys():
+                item_qt = survivor_2.inventory.items.get(name=item_key).quantity
+                if item_qt - request.data[1]["survivor_2"]["trade_item"][item_key] >= 0:
+                    item_points = survivor_2.inventory.items.get(name=item_key).points
+                    points_survivor_2 += request.data[1]["survivor_2"]["trade_item"][item_key] * item_points
+                else:
+                    raise Exception("It isn't enough to trade! Permission denied!")
+            if points_survivor_1 == points_survivor_2:
+                for data in request.data:
+                    if data["id"] == survivor_1.id:
+                        for trade_item in data["survivor_1"]["trade_item"].keys():
+                            for item in items:
+                                if trade_item == item:
+                                    trade_sur_1 = survivor_1.inventory.items.get(name=item)
+                                    trade_sur_1.quantity -= data["survivor_1"]["trade_item"][item]
+                                    trade_sur_1.save()
+                                    trade_sur_2 = survivor_2.inventory.items.get(name=item)
+                                    trade_sur_2.quantity += data["survivor_1"]["trade_item"][item]
+                                    trade_sur_2.save()
+                    else:
+                        for trade_item in data["survivor_2"]["trade_item"].keys():
+                            for item in items:
+                                if trade_item == item:
+                                    trade_sur_2 = survivor_2.inventory.items.get(name=item)
+                                    trade_sur_2.quantity -= data["survivor_2"]["trade_item"][item]
+                                    trade_sur_2.save()
+                                    trade_sur_1 = survivor_1.inventory.items.get(name=item)
+                                    trade_sur_1.quantity += data["survivor_2"]["trade_item"][item]
+                                    trade_sur_1.save()
+                serializer_1 = SurvivorSerializer(survivor_1)
+                serializer_2 = SurvivorSerializer(survivor_2)
+                data = ((serializer_1.data), (serializer_2.data))
+                return Response(data)
+            else:
+                raise Exception("You must have the same amount of points to trade! Permission denied!")
+        else:
+            raise Exception("Zombie invasion! Permission denied!")
