@@ -38,7 +38,7 @@ class GenerateReports:
             lost_points += item_points
         return lost_points
 
-    def generate_reports(self):
+    def perform(self):
         reports = self.get_or_create_report()
         reports.per_infected = self.percentage_of_infected_survivors()
         reports.per_not_infected = self.percentage_of_non_infected_survivors()

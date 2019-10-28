@@ -93,7 +93,8 @@ class TradeItems(APIView, Trader):
     def patch(self, request, pk_sur_1, pk_sur_2, format=None):
         survivor_1 = get_object_or_404(Survivor, pk=pk_sur_1)
         survivor_2 = get_object_or_404(Survivor, pk=pk_sur_2)
-        trade = self.trade_items(request, survivor_1, survivor_2)
+        trader = Trader(request, survivor_1, survivor_2)
+        trade = trader.perform()
         if trade:
             serializer_1 = SurvivorSerializer(survivor_1)
             serializer_2 = SurvivorSerializer(survivor_2)
@@ -107,6 +108,6 @@ class ViewReports(APIView, GenerateReports):
 
     def get(self, request, format=None):
         generate = GenerateReports()
-        reports = generate.generate_reports()
+        reports = generate.perform()
         serializer = ReportsSerializer(reports)
         return Response(serializer.data)
