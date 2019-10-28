@@ -69,7 +69,7 @@ The REST API to the ZSSN is described below.
  - GET: `/` - API root
  - GET/POST: `/survivors` - List all survivors / Add survivors
  - GET: `/survivors/<id>` - Get survivor
- - GET/PUT: `/survivors/<id>/last-location` - Update survivor location
+ - GET/PATCH: `/survivors/<id>/last-location` - Update survivor location
  - GET/PATCH: `/survivors/<id-reporter>/report-infected/<id-reported>` - Flag survivor as infected
  - GET/PATCH: `/survivors/<id-survivor-1>/trade-items/<id-survivor-2>` - Trade items between non infected survivors
  - GET: `/survivors/reports` - Get reports
@@ -141,7 +141,7 @@ URL example:
 
 ### Update survivor location
 
- - GET/PUT: `/survivors/<id>/last-location`
+ - GET/PATCH: `/survivors/<id>/last-location`
 	 - `<id> is the identifier of the survivor.`
 
 URL example:
@@ -152,7 +152,6 @@ JSON example:
 
 ```
 {
-    "id": 1,
     "latitude": "52.522906000000000000000000000000",
     "longitude": "10.411560000000000000000000000000"
 }

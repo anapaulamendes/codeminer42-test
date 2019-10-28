@@ -1,4 +1,4 @@
-from .models import Survivor, LastLocation, Item, Reports
+from .models import Survivor, LastLocation
 from .serializers import SurvivorSerializer, LastLocationSerializer, ReportsSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -47,7 +47,7 @@ class LastLocationUpdate(APIView):
         serializer = LastLocationSerializer(last_location)
         return Response(serializer.data)
 
-    def put(self, request, pk, format=None):
+    def patch(self, request, pk, format=None):
         survivor = get_object_or_404(Survivor, pk=pk)
         if survivor.infected == False:
             last_location = get_object_or_404(LastLocation, pk=survivor.last_location_id)
