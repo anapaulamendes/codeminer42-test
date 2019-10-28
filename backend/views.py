@@ -70,7 +70,8 @@ class ReportInfected(APIView, FlagInfected):
     def patch(self, request, pk_reporter, pk_reported, format=None):
         reporter = get_object_or_404(Survivor, pk=pk_reporter)
         reported = get_object_or_404(Survivor, pk=pk_reported)
-        data = self.report_infected(request, reporter, reported)
+        flagger = FlagInfected(request.data["infected"], reporter, reported)
+        data = flagger.perform()
         if data:
             serializer = SurvivorSerializer(reported, data=data, partial=True)
             if serializer.is_valid():
