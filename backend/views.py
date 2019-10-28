@@ -106,6 +106,7 @@ class TradeItems(APIView, Trader):
 class ViewReports(APIView, GenerateReports):
 
     def get(self, request, format=None):
-        reports = self.generate_reports()
+        generate = GenerateReports()
+        reports = generate.generate_reports()
         serializer = ReportsSerializer(reports)
         return Response(serializer.data)
